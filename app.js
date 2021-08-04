@@ -1,50 +1,49 @@
-const MongoClient = require("mongodb").MongoClient;
-const assert = require("assert");
+// using Mongoose
+const mongoose = require("mongoose");
 
-// Connection URL
-const url = "mongodb://localhost:27017";
-
-// Database Name
-const dbName = "fruitsDB";
-const client = new MongoClient(url, { useNewUrlParser: true });
-
-// Use connect method to connect to the server
-client.connect(function (err) {
-  assert.equal(null, err);
-  console.log("Connected successfully to server");
-
-  const db = client.db(dbName);
-
-  // insertDocuments(db, function () {
-  //   client.close();
-  // });
-
-  findDocuments(db, function () {
-    client.close();
-  });
+mongoose.connect("mongodb://localhost:27017/fruitDB", {
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useCreateIndex: true,
 });
 
-const insertDocuments = function (db, callback) {
-  // Get the documents collection
-  const collection = db.collection("fruits");
-  // Insert some documents
-  collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }], function (err, result) {
-    assert.equal(err, null);
-    // assert.equal(3, result.result.n);
-    // assert.equal(3, result.ops.length);
-    console.log("Inserted 3 documents into the collection");
-    callback(result);
-  });
-};
+const fruitSchema = new mongoose.Schema({
+  name: String,
+  rating: Number,
+  review: String,
+});
 
-const findDocuments = function (db, callback) {
-  // Get the documents collection
-  const collection = db.collection("fruits");
-  // Find some documents
-  collection.find({}).toArray(function (err, fruits) {
-    assert.equal(err, null);
-    console.log("Found the following records");
+const Fruit = mongoose.model("FRUIT", fruitSchema);
+
+const fruit = new Fruit({
+  name: "Apple",
+  rating: 7,
+  review: "Pretty solid as a fruit",
+});
+
+fruit.save(); // insertion of single data
+
+Fruit.insertMany(
+  // insertion of multitple rows
+  [{ name: "Kiwi" }, { name: "Banana" }, { name: "Cheese" }],
+  function (err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Successfully saved all the fruits");
+    }
+  }
+);
+
+Fruit.find(function (err, fruits) {
+  //reading the data
+  if (err) {
+    console.log(err);
+  } else {
     console.log(fruits);
-    callback(fruits);
+  }
+
+  fruits.forEach(function (fruit) {
+    console.log(fruit.name);
   });
-};
+});
